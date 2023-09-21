@@ -19,9 +19,22 @@ repositories {
 }
 
 dependencies {
+	// Базовые зависимости
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-web")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	implementation("org.postgresql:postgresql:42.6.0")
+
+	// Для джавы, если её придётся использовать.
+	compileOnly("org.projectlombok:lombok:1.18.26")
+
+	// Валидация и безопасность
+	implementation("org.springframework.security:spring-security-core:6.1.2")
+	implementation("org.springframework.security:spring-security-crypto:6.1.2")
+	implementation("commons-validator:commons-validator:1.7")
+
 }
 
 tasks.withType<KotlinCompile> {

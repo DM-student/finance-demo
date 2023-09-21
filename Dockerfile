@@ -1,0 +1,5 @@
+FROM postgres:14-alpine
+ENV POSTGRES_DB="finance-db"
+ENV POSTGRES_USER="admin"
+ENV POSTGRES_PASSWORD="admin"
+ENV PGPORT=8081
