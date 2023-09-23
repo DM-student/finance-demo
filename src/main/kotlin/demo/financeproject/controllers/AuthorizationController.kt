@@ -1,22 +1,20 @@
 package demo.financeproject.controllers
 
+import demo.financeproject.users.UserAuthorization
 import demo.financeproject.users.UserService
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
-class AuthorizationController(val userService: UserService) {
+class UserController(val userService: UserService, val userAuthorization: UserAuthorization) {
     data class UserLoginDto(var login:String, var password:String)
 
     @PostMapping("/register")
     fun register (requestHttpServlet: HttpServletRequest,
-               responseHttpServlet:HttpServletResponse,
-               @RequestBody requestBody: UserLoginDto) {
+                  responseHttpServlet:HttpServletResponse,
+                  @RequestBody requestBody: UserLoginDto) {
         userService.createUser(requestBody.login, requestBody.password)
     }
 
@@ -24,8 +22,8 @@ class AuthorizationController(val userService: UserService) {
     fun login (requestHttpServlet: HttpServletRequest,
                responseHttpServlet: HttpServletResponse,
                @RequestBody requestBody: UserLoginDto) {
-        val token = userService.loginUser(requestBody.login, requestBody.password)
-        responseHttpServlet.addCookie(Cookie("userToken", token))
+        val token = userService.getUserAuthToken(requestBody.login, requestBody.password)
+        responseHttpServlet.addCookie(Cookie( "userAuthToken", token))
     }
 
     /**
@@ -37,5 +35,11 @@ class AuthorizationController(val userService: UserService) {
                       responseHttpServlet:HttpServletResponse,
                       @RequestParam userId: Int) {
         userService.activateUser(userId)
+    }
+
+    @GetMapping("/usertest")
+    fun test (requestHttpServlet: HttpServletRequest,
+               responseHttpServlet: HttpServletResponse) {
+        userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
     }
 }

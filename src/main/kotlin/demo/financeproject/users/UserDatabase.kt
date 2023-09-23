@@ -51,4 +51,7 @@ interface UserRepository : JpaRepository<UserEntity, Int> {
 
     @Query (value = "SELECT u FROM UserEntity u WHERE u.login = ?1 ORDER BY u.id")
     fun findUserByLogin(login: String): Optional<UserEntity>
+
+    @Query (value = "SELECT u FROM UserEntity u WHERE u.token = ?1 ORDER BY u.id")
+    fun findUserByToken(login: String): Optional<UserEntity>
 }

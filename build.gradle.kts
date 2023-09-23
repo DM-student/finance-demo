@@ -5,7 +5,13 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.3"
 	kotlin("jvm") version "1.8.22"
 	kotlin("plugin.spring") version "1.8.22"
+	id("org.flywaydb.flyway") version "9.22.1"
 }
+
+flyway.url="jdbc:postgresql://localhost:8081/finance-db"
+flyway.user="admin"
+flyway.password="admin"
+flyway.locations = arrayOf("filesystem:db/migration", "filesystem:src/main/resources/db/migration")
 
 group = "demo"
 version = "0.0.1-SNAPSHOT"
@@ -35,6 +41,8 @@ dependencies {
 	implementation("org.springframework.security:spring-security-crypto:6.1.2")
 	implementation("commons-validator:commons-validator:1.7")
 
+	// БД
+	implementation("org.flywaydb:flyway-core:9.21.2")
 }
 
 tasks.withType<KotlinCompile> {
