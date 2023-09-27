@@ -4,14 +4,13 @@ import demo.financeproject.controllers.BaseError
 import jakarta.servlet.http.Cookie
 
 import org.springframework.http.HttpStatus
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 
 /**
  * Авторизация пользователя была вынесена мною в отдельный сервис.
  */
 @Service
-class UserAuthorization(val userRepository: UserRepository) {
+class UserAuthorization(val usersRepository: UsersRepository) {
     /**
      * Принимает куки клиента и извлекает из них данные для попытки автоматической авторизации.
      * @param cookies куки из которых надо извлечь данные пользователя.
@@ -21,8 +20,12 @@ class UserAuthorization(val userRepository: UserRepository) {
     fun getAuthorizedUser(cookies: Array<Cookie>): UserEntity {
         val cookie = cookies.firstOrNull { it.name!! == "userAuthToken" } ?: throw UserAuthError()
 
-        return userRepository.findUserByToken(cookie.value)
-            .orElseThrow{throw UserAuthError()}
+        val user = usersRepository.findUserByToken(cookie.value)
+            .orElseThrow { throw UserAuthError() }
+        if (user.status != UserEntityStatus.ACTIVE) {
+            throw UserAuthError("Authorization has failed. Account status is: ${user.status!!.status_text}")
+        }
+        return user
     }
 
     /**
@@ -40,4 +43,4 @@ class UserAuthorization(val userRepository: UserRepository) {
     }
 }
 
-class UserAuthError : BaseError("Authorization has failed.", HttpStatus.FORBIDDEN)
+class UserAuthError(message: String = "Authorization has failed.") : BaseError(message, HttpStatus.FORBIDDEN)
