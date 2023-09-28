@@ -14,7 +14,7 @@ flyway.password="admin"
 flyway.locations = arrayOf("filesystem:db/migration", "filesystem:src/main/resources/db/migration")
 
 group = "demo"
-version = "0.0.1-SNAPSHOT"
+version = "0.1.0-Beta"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
