@@ -17,6 +17,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
         @RequestBody requestBody: UserLoginDto
     ) {
         userService.createUser(requestBody.login, requestBody.password)
+        responseHttpServlet.status = 201
     }
 
     @PatchMapping("/user/password")
@@ -25,7 +26,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
         responseHttpServlet: HttpServletResponse,
         @RequestBody requestBody: UserPasswordChangeDto
     ) {
-        val user =  userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
+        val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         userService.changeUserPassword(user.id!!, requestBody.newPassword, requestBody.oldPassword)
     }
 
@@ -35,7 +36,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
         responseHttpServlet: HttpServletResponse,
         @RequestBody requestBody: UserLoginDto
     ) {
-        val user =  userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
+        val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         userService.changeUserLogin(user.id!!, requestBody.login, requestBody.password)
     }
 
@@ -83,6 +84,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
         }
         userService.blockUser(userId, reason)
     }
+
     @PostMapping("/system/user/unblock")
     fun unblockUser(
         requestHttpServlet: HttpServletRequest,

@@ -91,13 +91,14 @@ class UserService(val usersRepository: UsersRepository) {
         user.statusReason = reason
         usersRepository.save(user)
     }
+
     fun unblockUser(userId: Int, reason: String?) {
         val user: UserEntity = usersRepository.findById(userId)
             .orElseThrow { UserError("Пользователь №$userId не найден.") }
         if (user.status != UserEntityStatus.BLOCKED) {
             throw UserError("Пользователь №$userId не заблокирован.", HttpStatus.CONFLICT)
         }
-        user.status = UserEntityStatus.BLOCKED
+        user.status = UserEntityStatus.ACTIVE
         user.statusReason = reason
         usersRepository.save(user)
     }
@@ -162,7 +163,7 @@ class UserService(val usersRepository: UsersRepository) {
         if (usersRepository.findUserByLogin(newLogin).isPresent) {
             throw UserError("Электронная почта уже занята.", HttpStatus.CONFLICT)
         }
-        if (hashCrypt.matches(password, user.password)) {
+        if (!hashCrypt.matches(password, user.password)) {
             throw UserError("Указан не верный пароль.", HttpStatus.FORBIDDEN)
         }
         user.login = newLogin

@@ -56,19 +56,22 @@ class FinanceOperationEntity {
 
     @Transient
     fun isValid(categoriesRepository: FinanceCategoriesRepository): Boolean {
-        if(owner == null) {
+        if (owner == null) {
             return false
         }
-        if(category != null && category!!.owner!!.id == owner!!.id) {
+        if (category != null && category!!.owner!!.id != owner!!.id) {
             return false
         }
-        if(operationTimestamp == null) {
+        if (operationTimestamp == null) {
             return false
         }
-        if(title == null || title!!.length > 64) {
+        if (amount == null) {
             return false
         }
-        if(description != null && description!!.isBlank()) {
+        if (title == null || title!!.length > 64) {
+            return false
+        }
+        if (description != null && description!!.isBlank()) {
             return false
         }
         return true
@@ -97,10 +100,10 @@ class FinanceCategoryEntity {
 
     @Transient
     fun isValid(): Boolean {
-        if(owner == null) {
+        if (owner == null) {
             return false
         }
-        if(title == null || title!!.length > 64) {
+        if (title == null || title!!.length > 64) {
             return false
         }
         return true
@@ -127,38 +130,71 @@ interface FinanceOperationsRepository : JpaRepository<FinanceOperationEntity, In
 
     // search
 
-    @Query(value = "SELECT f " +
-            "FROM FinanceOperationEntity f " +
-            "WHERE f.owner.id = ?2 " +
-            "AND " +
-            "( " +
-            "LOWER(f.title) LIKE ?1 " +
-            "OR " +
-            "LOWER(f.description) LIKE ?1" +
-            ") " +
-            "ORDER BY f.operationTimestamp DESC")
+    @Query(
+        value = "SELECT f " +
+                "FROM FinanceOperationEntity f " +
+                "WHERE f.owner.id = ?2 " +
+                "AND " +
+                "( " +
+                "LOWER(f.title) LIKE ?1 " +
+                "OR " +
+                "LOWER(f.description) LIKE ?1" +
+                ") " +
+                "ORDER BY f.operationTimestamp DESC"
+    )
     fun getOperationsPageForSearchSortByDate(
         searchQuery: String,
         userId: Int,
         pageable: Pageable
     ): Page<FinanceOperationEntity>
 
-    @Query(value = "SELECT f " +
-            "FROM FinanceOperationEntity f " +
-            "WHERE f.owner.id = ?2 " +
-            "AND " +
-            "( " +
-            "LOWER(f.title) LIKE ?1 " +
-            "OR " +
-            "LOWER(f.description) LIKE ?1" +
-            ") " +
-            "ORDER BY f.amount DESC")
+    @Query(
+        value = "SELECT f " +
+                "FROM FinanceOperationEntity f " +
+                "WHERE f.owner.id = ?2 " +
+                "AND " +
+                "( " +
+                "LOWER(f.title) LIKE ?1 " +
+                "OR " +
+                "LOWER(f.description) LIKE ?1" +
+                ") " +
+                "ORDER BY f.amount DESC"
+    )
     fun getOperationsPageForSearchSortByAmount(
         searchQuery: String,
         userId: Int,
         pageable: Pageable
     ): Page<FinanceOperationEntity>
 
+    @Query(
+        value = "SELECT new list(SUM(f.amount), COUNT(f.id)) " +
+                "FROM FinanceOperationEntity f " +
+                "WHERE f.owner.id = ?3 " +
+                "AND " +
+                "f.operationTimestamp > ?1 " +
+                "AND " +
+                "f.operationTimestamp < ?2 "
+    )
+    fun getFinanceSummary(
+        rangeStart: ZonedDateTime,
+        rangeEnd: ZonedDateTime,
+        userId: Int
+    ): List<List<Any>>
+
+    @Query(
+        value = "SELECT new list(SUM(f.amount), COUNT(f.id)) " +
+                "FROM FinanceOperationEntity f " +
+                "WHERE f.category.id = ?3 " +
+                "AND " +
+                "f.operationTimestamp > ?1 " +
+                "AND " +
+                "f.operationTimestamp < ?2 "
+    )
+    fun getFinanceSummaryForCategory(
+        rangeStart: ZonedDateTime,
+        rangeEnd: ZonedDateTime,
+        categoryId: Int
+    ): List<List<Any>>
 }
 
 interface FinanceCategoriesRepository : JpaRepository<FinanceCategoryEntity, Int> {
