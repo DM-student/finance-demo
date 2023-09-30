@@ -48,6 +48,9 @@ class UserService(val usersRepository: UsersRepository) {
             throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
         }
         // Представим, что пароль может быть любым набором символов.
+        if (rawPassword.length < 5) {
+            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        }
         if (rawPassword.length > 64) {
             throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
         }
@@ -145,8 +148,11 @@ class UserService(val usersRepository: UsersRepository) {
             throw UserError("Старый пароль не совпадает с предоставленным.", HttpStatus.BAD_REQUEST)
         }
         // Представим, что пароль может быть любым набором символов.
-        if (newPassword.isBlank()) {
-            throw UserError("Новый пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        if (newPassword.length < 5) {
+            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        }
+        if (newPassword.length > 64) {
+            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
         }
         user.password = hashCrypt.encode(newPassword)
         usersRepository.save(user)
