@@ -1,6 +1,9 @@
 package demo.financeproject.users
 
 import demo.financeproject.controllers.BaseError
+import demo.financeproject.users.jpa.entity.UserEntity
+import demo.financeproject.users.jpa.entity.UserEntityStatus
+import demo.financeproject.users.jpa.repository.UsersRepository
 import org.apache.commons.validator.routines.EmailValidator
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
@@ -13,6 +16,27 @@ import kotlin.jvm.optionals.getOrNull
 class UserService(val usersRepository: UsersRepository) {
     val hashCrypt = BCryptPasswordEncoder()
     val emailValidator: EmailValidator = EmailValidator.getInstance()
+    fun validatePassword(password: String) {
+        // Представим, что пароль может использовать любые символы, но не может содержать только пробелы.
+        if (password.isBlank()) {
+            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        }
+        if (password.length < 5) {
+            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        }
+        if (password.length > 64) {
+            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    fun validateLogin(login: String) {
+        if (!emailValidator.isValid(login)) {
+            throw UserError("Электронная почта не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        }
+        if (usersRepository.findUserByLogin(login).isPresent) {
+            throw UserError("Электронная почта уже занята.", HttpStatus.CONFLICT)
+        }
+    }
 
     // Заготовил пару методов на всякий случай.
 
@@ -36,31 +60,17 @@ class UserService(val usersRepository: UsersRepository) {
 
         val newUser = UserEntity()
 
-        if (!emailValidator.isValid(login)) {
-            throw UserError("Электронная почта не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
-        }
-        if (usersRepository.findUserByLogin(login).isPresent) {
-            throw UserError("Электронная почта уже занята.", HttpStatus.CONFLICT)
+        validateLogin(login)
+        validatePassword(rawPassword)
+
+        newUser.apply {
+            this.login = login
+            password = hashCrypt.encode(rawPassword)
+            token = generateLoginToken(newUser.login!!, newUser.password!!)
+            status = UserEntityStatus.AWAITS_ACTIVATION
+            statusReason = "Ожидает подтверждение."
         }
 
-        // Представим, что пароль может быть любым набором символов.
-        if (rawPassword.isBlank()) {
-            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
-        }
-        // Представим, что пароль может быть любым набором символов.
-        if (rawPassword.length < 5) {
-            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
-        }
-        if (rawPassword.length > 64) {
-            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
-        }
-
-
-        newUser.login = login
-        newUser.password = hashCrypt.encode(rawPassword)
-        newUser.token = generateLoginToken(newUser.login!!, newUser.password!!)
-        newUser.status = UserEntityStatus.AWAITS_ACTIVATION
-        newUser.statusReason = "Ожидает подтверждение."
 
         usersRepository.save(newUser)
     }
@@ -79,8 +89,10 @@ class UserService(val usersRepository: UsersRepository) {
         if (user.status != UserEntityStatus.AWAITS_ACTIVATION) {
             throw UserError("Пользователь №$userId не нуждается в активации.", HttpStatus.CONFLICT)
         }
-        user.status = UserEntityStatus.ACTIVE
-        user.statusReason = null
+        user.apply {
+            status = UserEntityStatus.ACTIVE
+            statusReason = null
+        }
         usersRepository.save(user)
     }
 
@@ -90,8 +102,10 @@ class UserService(val usersRepository: UsersRepository) {
         if (user.status == UserEntityStatus.BLOCKED) {
             throw UserError("Пользователь №$userId уже заблокирован.", HttpStatus.CONFLICT)
         }
-        user.status = UserEntityStatus.BLOCKED
-        user.statusReason = reason
+        user.apply {
+            status = UserEntityStatus.BLOCKED
+            statusReason = reason
+        }
         usersRepository.save(user)
     }
 
@@ -101,8 +115,10 @@ class UserService(val usersRepository: UsersRepository) {
         if (user.status != UserEntityStatus.BLOCKED) {
             throw UserError("Пользователь №$userId не заблокирован.", HttpStatus.CONFLICT)
         }
-        user.status = UserEntityStatus.ACTIVE
-        user.statusReason = reason
+        user.apply {
+            status = UserEntityStatus.ACTIVE
+            statusReason = reason
+        }
         usersRepository.save(user)
     }
 
@@ -147,13 +163,9 @@ class UserService(val usersRepository: UsersRepository) {
         if (oldPassword != null && !hashCrypt.matches(oldPassword, user.password)) {
             throw UserError("Старый пароль не совпадает с предоставленным.", HttpStatus.BAD_REQUEST)
         }
-        // Представим, что пароль может быть любым набором символов.
-        if (newPassword.length < 5) {
-            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
-        }
-        if (newPassword.length > 64) {
-            throw UserError("Пароль не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
-        }
+
+        validatePassword(newPassword)
+
         user.password = hashCrypt.encode(newPassword)
         usersRepository.save(user)
     }
@@ -163,17 +175,12 @@ class UserService(val usersRepository: UsersRepository) {
             .orElseThrow { UserError("Пользователь №$userId не найден") }
         val newLogin = newRawLogin.lowercase().trim()
 
-        if (!emailValidator.isValid(newLogin)) {
-            throw UserError("Электронная почта не соответствует требуемому формату.", HttpStatus.BAD_REQUEST)
+        validateLogin(newLogin)
+
+        user.apply {
+            login = newLogin
+            status = UserEntityStatus.AWAITS_ACTIVATION
         }
-        if (usersRepository.findUserByLogin(newLogin).isPresent) {
-            throw UserError("Электронная почта уже занята.", HttpStatus.CONFLICT)
-        }
-        if (!hashCrypt.matches(password, user.password)) {
-            throw UserError("Указан не верный пароль.", HttpStatus.FORBIDDEN)
-        }
-        user.login = newLogin
-        user.status = UserEntityStatus.AWAITS_ACTIVATION
         usersRepository.save(user)
     }
 

@@ -14,7 +14,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
     fun register(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: UserLoginDto
+        @RequestBody requestBody: UserLoginPasswordDto
     ) {
         userService.createUser(requestBody.login, requestBody.password)
         responseHttpServlet.status = 201
@@ -34,7 +34,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
     fun changeLogin(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: UserLoginDto
+        @RequestBody requestBody: UserLoginPasswordDto
     ) {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         userService.changeUserLogin(user.id!!, requestBody.login, requestBody.password)
@@ -44,7 +44,7 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
     fun login(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: UserLoginDto
+        @RequestBody requestBody: UserLoginPasswordDto
     ) {
         val token = userService.getUserAuthToken(requestBody.login, requestBody.password)
         responseHttpServlet.addCookie(Cookie("userAuthToken", token))
@@ -109,5 +109,5 @@ class UserController(val userService: UserService, val userAuthorization: UserAu
 }
 
 class SystemPasswordError(message: String = "System password is wrong!") : BaseError(message, HttpStatus.FORBIDDEN)
-data class UserLoginDto(var login: String, var password: String)
+data class UserLoginPasswordDto(var login: String, var password: String)
 data class UserPasswordChangeDto(var newPassword: String, var oldPassword: String)

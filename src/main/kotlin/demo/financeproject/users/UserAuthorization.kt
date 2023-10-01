@@ -1,6 +1,9 @@
 package demo.financeproject.users
 
 import demo.financeproject.controllers.BaseError
+import demo.financeproject.users.jpa.entity.UserEntity
+import demo.financeproject.users.jpa.entity.UserEntityStatus
+import demo.financeproject.users.jpa.repository.UsersRepository
 import jakarta.servlet.http.Cookie
 
 import org.springframework.http.HttpStatus

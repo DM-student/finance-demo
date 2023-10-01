@@ -1,6 +1,7 @@
 package demo.financeproject.controllers
 
 import demo.financeproject.finances.*
+import demo.financeproject.finances.dto.*
 import demo.financeproject.users.UserAuthorization
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

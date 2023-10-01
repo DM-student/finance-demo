@@ -1,12 +1,6 @@
-package demo.financeproject.users
+package demo.financeproject.users.jpa.entity
 
 import jakarta.persistence.*
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import java.util.*
-
 
 @Entity
 @Table(name = "users")
@@ -51,15 +45,4 @@ enum class UserEntityStatus(val status_text: String) {
     ACTIVE("ACTIVE"),
     AWAITS_ACTIVATION("AWAITS ACTIVATION"),
     BLOCKED("BLOCKED")
-}
-
-interface UsersRepository : JpaRepository<UserEntity, Int> {
-    @Query(value = "SELECT u FROM UserEntity u WHERE u.status = ?1 ORDER BY u.id DESC")
-    fun pageUsersForStatusWithPagination(status: UserEntityStatus, pageable: Pageable): Page<UserEntity>
-
-    @Query(value = "SELECT u FROM UserEntity u WHERE u.login = ?1")
-    fun findUserByLogin(login: String): Optional<UserEntity>
-
-    @Query(value = "SELECT u FROM UserEntity u WHERE u.token = ?1")
-    fun findUserByToken(login: String): Optional<UserEntity>
 }
