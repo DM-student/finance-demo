@@ -15,57 +15,57 @@ class FinanceService(
 ) {
     fun postOperation(
         user: UserEntity,
-        requestOperationDto: RequestOperationDto
-    ): OperationDto {
+        operationDto: OperationDto
+    ): ResponseOperationDto {
         val error = BadRequestError("Финансовая операция не соответствует формату и/или не содержит нужные переменные.")
         val newOperation = FinanceOperationEntity()
         newOperation.owner = user
 
-        if (requestOperationDto.categoryId != null) {
-            newOperation.category = getCategoryRaw(user, requestOperationDto.categoryId!!)
+        if (operationDto.categoryId != null) {
+            newOperation.category = getCategoryRaw(user, operationDto.categoryId!!)
         }
         newOperation.operationTimestamp = ZonedDateTime.now()
-        newOperation.amount = requestOperationDto.amount
-        newOperation.title = requestOperationDto.title
-        newOperation.description = requestOperationDto.description
+        newOperation.amount = operationDto.amount
+        newOperation.title = operationDto.title
+        newOperation.description = operationDto.description
 
 
         if (!newOperation.isValid(categoriesRepository)) {
             throw error
         }
 
-        return OperationDto.mapToDto(operationsRepository.save(newOperation))
+        return ResponseOperationDto.mapToDto(operationsRepository.save(newOperation))
     }
 
     fun updateOperation(
         user: UserEntity,
-        requestOperationDto: RequestOperationDto
-    ): OperationDto {
+        operationDto: OperationDto
+    ): ResponseOperationDto {
         val error = BadRequestError("Финансовая операция не соответствует формату и/или не содержит нужные переменные.")
-        if (requestOperationDto.id == null) {
+        if (operationDto.id == null) {
             throw error
         }
-        val operation = getOperationRaw(user, requestOperationDto.id!!)
+        val operation = getOperationRaw(user, operationDto.id!!)
 
-        if (requestOperationDto.categoryId != null) {
-            operation.category = getCategoryRaw(user, requestOperationDto.categoryId!!)
+        if (operationDto.categoryId != null) {
+            operation.category = getCategoryRaw(user, operationDto.categoryId!!)
         }
-        operation.amount = requestOperationDto.amount
-        operation.title = requestOperationDto.title
-        operation.description = requestOperationDto.description
+        operation.amount = operationDto.amount
+        operation.title = operationDto.title
+        operation.description = operationDto.description
 
         if (!operation.isValid(categoriesRepository)) {
             throw error
         }
 
-        return OperationDto.mapToDto(operationsRepository.save(operation))
+        return ResponseOperationDto.mapToDto(operationsRepository.save(operation))
     }
 
     fun deleteOperation(
         user: UserEntity,
         operationId: Int
     ) {
-        OperationDto.mapToDto(getOperationRaw(user, operationId))
+        ResponseOperationDto.mapToDto(getOperationRaw(user, operationId))
         operationsRepository.deleteById(operationId)
     }
 
@@ -87,15 +87,15 @@ class FinanceService(
     fun getOperation(
         user: UserEntity,
         operationId: Int
-    ): OperationDto {
-        return OperationDto.mapToDto(getOperationRaw(user, operationId))
+    ): ResponseOperationDto {
+        return ResponseOperationDto.mapToDto(getOperationRaw(user, operationId))
     }
 
     fun getOperations(
         user: UserEntity,
         pageable: Pageable,
         sort: OperationSort
-    ): Page<OperationDto> {
+    ): Page<ResponseOperationDto> {
         val page = when (sort) {
             OperationSort.DATE -> {
                 operationsRepository.getOperationsPageForUserSortByDate(user.id!!, pageable)
@@ -105,7 +105,7 @@ class FinanceService(
                 operationsRepository.getOperationsPageForUserSortByAmount(user.id!!, pageable)
             }
         }
-        return page.map { OperationDto.mapToDto(it) }
+        return page.map { ResponseOperationDto.mapToDto(it) }
     }
 
     fun getOperationsForCategory(
@@ -113,7 +113,7 @@ class FinanceService(
         pageable: Pageable,
         categoryId: Int,
         sort: OperationSort
-    ): Page<OperationDto> {
+    ): Page<ResponseOperationDto> {
         val category = categoriesRepository.findById(categoryId)
             .orElseThrow { BadRequestError("Категория №$categoryId не найдена в категориях пользователя.") }
 
@@ -130,7 +130,7 @@ class FinanceService(
                 operationsRepository.getOperationsPageForCategorySortByAmount(categoryId, pageable)
             }
         }
-        return page.map { OperationDto.mapToDto(it) }
+        return page.map { ResponseOperationDto.mapToDto(it) }
     }
 
     fun getOperationsForSearchQuery(
@@ -138,7 +138,7 @@ class FinanceService(
         pageable: Pageable,
         searchQueryRaw: String,
         sort: OperationSort
-    ): Page<OperationDto> {
+    ): Page<ResponseOperationDto> {
         val searchQuery = "%${searchQueryRaw.lowercase().trim()}%"
 
         val page = when (sort) {
@@ -150,47 +150,47 @@ class FinanceService(
                 operationsRepository.getOperationsPageForSearchSortByAmount(searchQuery, user.id!!, pageable)
             }
         }
-        return page.map { OperationDto.mapToDto(it) }
+        return page.map { ResponseOperationDto.mapToDto(it) }
     }
 
     fun postCategory(
         user: UserEntity,
-        requestCategoryDto: RequestCategoryDto
-    ): CategoryDto {
+        categoryDto: CategoryDto
+    ): ResponseCategoryDto {
         val error =
             BadRequestError("Финансовая категория не соответствует формату и/или не содержит нужные переменные.")
         val category = FinanceCategoryEntity()
         category.owner = user
-        category.title = requestCategoryDto.title
+        category.title = categoryDto.title
         if (!category.isValid()) {
             throw error
         }
-        return CategoryDto.mapToDto(categoriesRepository.save(category))
+        return ResponseCategoryDto.mapToDto(categoriesRepository.save(category))
     }
 
     fun updateCategory(
         user: UserEntity,
-        requestCategoryDto: RequestCategoryDto
-    ): CategoryDto {
+        categoryDto: CategoryDto
+    ): ResponseCategoryDto {
         val error =
             BadRequestError("Финансовая категория не соответствует формату и/или не содержит нужные переменные.")
-        if (requestCategoryDto.id == null) {
+        if (categoryDto.id == null) {
             throw error
         }
-        val category = getCategoryRaw(user, requestCategoryDto.id!!)
+        val category = getCategoryRaw(user, categoryDto.id!!)
         category.owner = user
-        category.title = requestCategoryDto.title
+        category.title = categoryDto.title
         if (!category.isValid()) {
             throw error
         }
-        return CategoryDto.mapToDto(categoriesRepository.save(category))
+        return ResponseCategoryDto.mapToDto(categoriesRepository.save(category))
     }
 
     fun deleteCategory(
         user: UserEntity,
         categoryId: Int
     ) {
-        CategoryDto.mapToDto(getCategoryRaw(user, categoryId))
+        ResponseCategoryDto.mapToDto(getCategoryRaw(user, categoryId))
         categoriesRepository.deleteById(categoryId)
     }
 
@@ -212,13 +212,13 @@ class FinanceService(
     fun getCategory(
         user: UserEntity,
         categoryId: Int
-    ): CategoryDto {
-        return CategoryDto.mapToDto(getCategoryRaw(user, categoryId))
+    ): ResponseCategoryDto {
+        return ResponseCategoryDto.mapToDto(getCategoryRaw(user, categoryId))
     }
 
-    fun getCategories(user: UserEntity, pageable: Pageable): Page<CategoryDto> {
+    fun getCategories(user: UserEntity, pageable: Pageable): Page<ResponseCategoryDto> {
         val page = categoriesRepository.getCategoriesPageForUser(user.id!!, pageable)
-        return page.map { CategoryDto.mapToDto(it) }
+        return page.map { ResponseCategoryDto.mapToDto(it) }
     }
 
     fun getSummary(user: UserEntity, rangeStart: ZonedDateTime?, rangeEnd: ZonedDateTime?): FinanceSummaryDto {
@@ -266,18 +266,18 @@ enum class OperationSort {
     AMOUNT
 }
 
-data class OperationDto(
+data class ResponseOperationDto(
     var id: Int,
     var ownerId: Int,
-    var category: CategoryDto? = null,
+    var category: ResponseCategoryDto? = null,
     var timestamp: ZonedDateTime,
     var amount: Double,
     var title: String,
     var description: String?
 ) {
     companion object {
-        fun mapToDto(operationEntity: FinanceOperationEntity): OperationDto {
-            val dto = OperationDto(
+        fun mapToDto(operationEntity: FinanceOperationEntity): ResponseOperationDto {
+            val dto = ResponseOperationDto(
                 operationEntity.id!!,
                 operationEntity.owner!!.id!!,
                 null,
@@ -286,34 +286,34 @@ data class OperationDto(
                 operationEntity.description
             )
             if (operationEntity.category != null) {
-                dto.category = CategoryDto.mapToDto(operationEntity.category!!)
+                dto.category = ResponseCategoryDto.mapToDto(operationEntity.category!!)
             }
             return dto
         }
     }
 }
 
-data class CategoryDto(
+data class ResponseCategoryDto(
     var id: Int,
     var ownerId: Int,
     var title: String
 ) {
     companion object {
-        fun mapToDto(categoryEntity: FinanceCategoryEntity): CategoryDto {
-            return CategoryDto(categoryEntity.id!!, categoryEntity.owner!!.id!!, categoryEntity.title!!)
+        fun mapToDto(categoryEntity: FinanceCategoryEntity): ResponseCategoryDto {
+            return ResponseCategoryDto(categoryEntity.id!!, categoryEntity.owner!!.id!!, categoryEntity.title!!)
         }
     }
 }
 
 data class FinanceSummaryDto(var totalSum: Any?, var operationsCount: Any?)
 
-data class RequestCategoryDto(
+data class CategoryDto(
     var id: Int? = null,
     var ownerId: Int? = null,
     var title: String? = null
 )
 
-data class RequestOperationDto(
+data class OperationDto(
     var id: Int? = null,
     var categoryId: Int? = null,
     var amount: Double? = null,

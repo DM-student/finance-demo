@@ -19,8 +19,8 @@ class FinanceController(
     fun postOperation(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: RequestOperationDto
-    ): OperationDto {
+        @RequestBody requestBody: OperationDto
+    ): ResponseOperationDto {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         responseHttpServlet.status = 201
         return financeService.postOperation(user, requestBody)
@@ -30,8 +30,8 @@ class FinanceController(
     fun updateOperation(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: RequestOperationDto
-    ): OperationDto {
+        @RequestBody requestBody: OperationDto
+    ): ResponseOperationDto {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         return financeService.updateOperation(user, requestBody)
     }
@@ -51,7 +51,7 @@ class FinanceController(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
         @PathVariable id: Int
-    ): OperationDto {
+    ): ResponseOperationDto {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         return financeService.getOperation(user, id)
     }
@@ -63,7 +63,7 @@ class FinanceController(
         @RequestParam page: Int,
         @RequestParam(defaultValue = "10") pageSize: Int,
         @RequestParam(defaultValue = "DATE") sort: OperationSort
-    ): Page<OperationDto> {
+    ): Page<ResponseOperationDto> {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         val pageable = PageRequest.of(page, pageSize)
         return financeService.getOperations(user, pageable, sort)
@@ -77,7 +77,7 @@ class FinanceController(
         @RequestParam page: Int,
         @RequestParam(defaultValue = "10") pageSize: Int,
         @RequestParam(defaultValue = "DATE") sort: OperationSort
-    ): Page<OperationDto> {
+    ): Page<ResponseOperationDto> {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         val pageable = PageRequest.of(page, pageSize)
         return financeService.getOperationsForCategory(user, pageable, categoryId, sort)
@@ -91,7 +91,7 @@ class FinanceController(
         @RequestParam page: Int,
         @RequestParam(defaultValue = "10") pageSize: Int,
         @RequestParam(defaultValue = "DATE") sort: OperationSort
-    ): Page<OperationDto> {
+    ): Page<ResponseOperationDto> {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         val pageable = PageRequest.of(page, pageSize)
         return financeService.getOperationsForSearchQuery(user, pageable, query, sort)
@@ -101,8 +101,8 @@ class FinanceController(
     fun postCategory(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: RequestCategoryDto
-    ): CategoryDto {
+        @RequestBody requestBody: CategoryDto
+    ): ResponseCategoryDto {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         responseHttpServlet.status = 201
         return financeService.postCategory(user, requestBody)
@@ -112,8 +112,8 @@ class FinanceController(
     fun updateCategory(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
-        @RequestBody requestBody: RequestCategoryDto
-    ): CategoryDto {
+        @RequestBody requestBody: CategoryDto
+    ): ResponseCategoryDto {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         return financeService.updateCategory(user, requestBody)
     }
@@ -133,7 +133,7 @@ class FinanceController(
         requestHttpServlet: HttpServletRequest,
         responseHttpServlet: HttpServletResponse,
         @PathVariable id: Int
-    ): CategoryDto {
+    ): ResponseCategoryDto {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         return financeService.getCategory(user, id)
     }
@@ -144,7 +144,7 @@ class FinanceController(
         responseHttpServlet: HttpServletResponse,
         @RequestParam page: Int,
         @RequestParam(defaultValue = "10") pageSize: Int
-    ): Page<CategoryDto> {
+    ): Page<ResponseCategoryDto> {
         val user = userAuthorization.getAuthorizedUser(requestHttpServlet.cookies)
         val pageable = PageRequest.of(page, pageSize)
         return financeService.getCategories(user, pageable)
